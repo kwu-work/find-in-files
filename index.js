@@ -10,15 +10,14 @@ function readFile(filename) {
 }
 
 function searchFile(data) {
-    return function(content) {
-
+    return function (content) {
         var match = content.match(data.regex),
-            linesMatch = content.match(data.lineRegEx)
+            linesMatch = content.match(data.lineRegEx);
 
         return {
             filename: data.filename,
             match: match,
-            lines: linesMatch
+            lines: linesMatch,
         };
     };
 }
@@ -33,41 +32,44 @@ function getFileFilter(fileFilter) {
 }
 
 function getRegEx(pattern, regex) {
-    var flags, term, grabLineRegEx
+    var flags, term, grabLineRegEx;
 
     if (typeof pattern === 'object' && pattern.flags) {
-        term = pattern.term
-        flags = pattern.flags
+        term = pattern.term;
+        flags = pattern.flags;
     } else {
-        term = pattern
-        flags = 'g'
+        term = pattern;
+        flags = 'g';
     }
 
-    grabLineRegEx = "(.*" + term + ".*)"
+    grabLineRegEx = '(.*' + term + '.*)';
 
     if (regex === 'line') {
-        return new RegExp(grabLineRegEx, flags)
+        return new RegExp(grabLineRegEx, flags);
     }
 
     return new RegExp(term, flags);
 }
 
 function getMatchedFiles(pattern, files) {
-    var matchedFiles = []
+    var matchedFiles = [];
     for (var i = files.length - 1; i >= 0; i--) {
-        matchedFiles.push(readFile(files[i])
-            .then(searchFile({
-                regex: getRegEx(pattern),
-                lineRegEx: getRegEx(pattern, 'line'),
-                filename: files[i]
-            })));
+        matchedFiles.push(
+            readFile(files[i]).then(
+                searchFile({
+                    regex: getRegEx(pattern),
+                    lineRegEx: getRegEx(pattern, 'line'),
+                    filename: files[i],
+                })
+            )
+        );
     }
 
     return matchedFiles;
 }
 
 function getResults(content) {
-    var results = {}
+    var results = {};
 
     for (var i = 0; i < content.length; i++) {
         var fileMatch = content[i].value;
@@ -75,7 +77,7 @@ function getResults(content) {
             results[fileMatch.filename] = {
                 matches: fileMatch.match,
                 count: fileMatch.match.length,
-                line: fileMatch.lines
+                line: fileMatch.lines,
             };
         }
     }
@@ -83,34 +85,32 @@ function getResults(content) {
     return results;
 }
 
-exports.find = function(pattern, directory, fileFilter) {
-    var deferred = Q.defer()
-    find
-    .file(getFileFilter(fileFilter), directory, function(files) {
+exports.find = function (pattern, directory, fileFilter) {
+    var deferred = Q.defer();
+    find.file(getFileFilter(fileFilter), directory, function (files) {
         Q.allSettled(getMatchedFiles(pattern, files))
-        .then(function (content) {
-            deferred.resolve(getResults(content));
-        })
-        .done();
-    })
-    .error(function (err){
-        deferred.reject(err)
+            .then(function (content) {
+                deferred.resolve(getResults(content));
+            })
+            .done();
+    }).error(function (err) {
+        deferred.reject(err);
     });
     return deferred.promise;
 };
 
-exports.findSync = function(pattern, directory, fileFilter) {
+exports.findSync = function (pattern, directory, fileFilter) {
     var deferred = Q.defer();
     var files;
     try {
         files = find.fileSync(getFileFilter(fileFilter), directory);
         Q.allSettled(getMatchedFiles(pattern, files))
-        .then(function (content) {
-            deferred.resolve(getResults(content));
-        })
-        .done();
+            .then(function (content) {
+                deferred.resolve(getResults(content));
+            })
+            .done();
     } catch (err) {
-        deferred.reject(err)
+        deferred.reject(err);
     }
     return deferred.promise;
 };

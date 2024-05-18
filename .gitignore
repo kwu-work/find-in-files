@@ -26,3 +26,4 @@ node_modules
 
 # SublimeText Project
 *.sublime*
+.vscode/settings.json
