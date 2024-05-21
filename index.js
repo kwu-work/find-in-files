@@ -114,3 +114,27 @@ exports.findSync = function (pattern, directory, fileFilter) {
     }
     return deferred.promise;
 };
+
+/**
+ * check if pattern exist in at least 1 file
+ * @param {*} pattern
+ * @param {*} directories
+ * @param {*} fileFilter
+ * @returns true - at least 1 match found, false - no match found in files
+ */
+exports.matchFound = function (pattern, directories, fileFilter) {
+    var files = [];
+
+    for (const directory of directories) {
+        files = files.concat(find.fileSync(getFileFilter(fileFilter), directory));
+    }
+
+    // return on 1st match for better performance
+    for (var i = files.length - 1; i >= 0; i--) {
+        var content = fs.readFileSync(files[i], { encoding: 'utf-8' });
+        if (!!content.match(getRegEx(pattern))) {
+            return true;
+        }
+    }
+    return false;
+};
