@@ -138,3 +138,30 @@ exports.matchFound = function (pattern, directories, fileFilter) {
     }
     return false;
 };
+
+/**
+ * find pattern in files, and return the 1st capturing group in an array
+ * @param {*} regex
+ * @param {*} directories
+ * @param {*} fileFilter
+ * @returns string[]
+ */
+exports.getArrayOfCapturingGroup = function (regex, directories, fileFilter) {
+    var files = [];
+    var keys = new Set();
+
+    for (const directory of directories) {
+        files = files.concat(find.fileSync(getFileFilter(fileFilter), directory));
+    }
+
+    for (var i = files.length - 1; i >= 0; i--) {
+        var content = fs.readFileSync(files[i], { encoding: 'utf-8' });
+        var matchAll = content.matchAll(regex);
+
+        [...matchAll].forEach((match) => {
+            keys.add(match[1]);
+        });
+    }
+
+    return keys;
+};
